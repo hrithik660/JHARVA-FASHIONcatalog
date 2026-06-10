@@ -35,4 +35,8 @@ dist-ssr
 .workspace/
 .netlify/
 .lovable/
+.vercel/
+scratch/
+.env
+.env.*
 

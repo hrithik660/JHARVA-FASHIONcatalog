@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { PRODUCTS, CATEGORIES, type Product } from "@/data/products";
+import { MENS_PRODUCTS, MENS_CATEGORIES, type MensProduct } from "@/data/mens_products";
 import {
-  buildWhatsAppLink,
   WHATSAPP_NUMBER,
   WHATSAPP_DISPLAY,
   INSTAGRAM_HANDLE,
@@ -11,7 +10,7 @@ import {
   LOCATION,
 } from "@/lib/whatsapp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Search, MessageCircle, X, Heart, ArrowRight, Sparkles, User, ShoppingBag, Instagram, Mail, MapPin, Phone, Plus, Minus, Trash2, ShieldCheck, Lock } from "lucide-react";
+import { Search, MessageCircle, X, Heart, ArrowRight, Sparkles, User, ShoppingBag, Instagram, Mail, MapPin, Plus, Minus, Trash2, Info, Check, ArrowLeft, ShieldCheck, Lock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listPublishedProducts } from "@/lib/catalog.functions";
@@ -19,23 +18,23 @@ import { useAuth } from "@/hooks/use-auth";
 import { placeOrder } from "@/lib/orders.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/mens")({
   head: () => ({
     meta: [
-      { title: "Jharva Fashion — Affordable Fashion That Looks Premium" },
-      { name: "description", content: "Shop Jharva Fashion — premium kurtis, tops, dresses and co-ords at a flat ₹99 (MRP ₹299). Enquire by style code on WhatsApp." },
-      { property: "og:title", content: "Jharva Fashion — Flat ₹99 Drop" },
-      { property: "og:description", content: "Trendy outfits curated for modern everyday style. Made in India." },
+      { title: "Jharva Men — Premium Anime Printed Oversized Tees" },
+      { name: "description", content: "Shop Jharva Men — premium anime printed oversized t-shirts at flat ₹299 (MRP ₹799). Luffy, Zoro, Goku, Naruto, Itachi & more." },
+      { property: "og:title", content: "Jharva Men — Anime Streetwear Drop" },
+      { property: "og:description", content: "Flat ₹299 anime oversized tees. Heavy 220 GSM combed cotton. Enquire on WhatsApp." },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/Lyb6zYaVQ6MB74D5Ph89lBj7Tee2/social-images/social-1780718174535-IMG_4795.webp" },
+      { property: "og:image", content: "/products/mens/JM-001.jpg" },
     ],
   }),
-  component: CatalogPage,
+  component: MensCatalogPage,
 });
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 12;
 
-function CatalogPage() {
+function MensCatalogPage() {
   const { user, isAdmin, signOut } = useAuth();
   const fetchProducts = useServerFn(listPublishedProducts);
   const { data: dbData } = useQuery({
@@ -45,11 +44,11 @@ function CatalogPage() {
 
   const productsList = useMemo(() => {
     const dbProducts = dbData?.products || [];
-    const dbWomenProducts = dbProducts.filter((p: any) => p.gender === "women" || p.gender === "unisex");
-    const dbSkus = new Set(dbWomenProducts.map((p: any) => p.sku.toLowerCase()));
-    const remainingStatic = PRODUCTS.filter(p => !dbSkus.has(p.styleCode.toLowerCase()));
+    const dbMenProducts = dbProducts.filter((p: any) => p.gender === "men" || p.gender === "unisex");
+    const dbSkus = new Set(dbMenProducts.map((p: any) => p.sku.toLowerCase()));
+    const remainingStatic = MENS_PRODUCTS.filter(p => !dbSkus.has(p.styleCode.toLowerCase()));
     
-    return [...dbWomenProducts, ...remainingStatic].map((p: any) => ({
+    return [...dbMenProducts, ...remainingStatic].map((p: any) => ({
       id: p.id || p.sku,
       styleCode: p.styleCode || p.sku,
       name: p.name,
@@ -57,9 +56,11 @@ function CatalogPage() {
       badge: p.badge || "",
       price: p.price,
       mrp: p.mrp,
-      image: p.image || p.image_url,
+      frontImage: p.frontImage || p.image || p.image_url,
+      backImage: p.backImage || "",
       sizes: p.sizes || [],
       description: p.description || "",
+      baseColor: p.baseColor || "Default",
     }));
   }, [dbData]);
 
@@ -67,7 +68,7 @@ function CatalogPage() {
   const [category, setCategory] = useState<string>("All");
   const [sizeFilter, setSizeFilter] = useState<string>("All");
   const [visible, setVisible] = useState(PAGE_SIZE);
-  const [active, setActive] = useState<Product | null>(null);
+  const [active, setActive] = useState<MensProduct | null>(null);
 
   // Pre-checkout details form states
   const [customerName, setCustomerName] = useState("");
@@ -78,19 +79,19 @@ function CatalogPage() {
   const [customerState, setCustomerState] = useState("");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
-  // PM Improvements: Wishlist & Cart states
+  // Local Storage states (Separated from women's to avoid interference)
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [cart, setCart] = useState<Array<{ product: Product; size: string; quantity: number }>>([]);
+  const [cart, setCart] = useState<Array<{ product: MensProduct; size: string; quantity: number }>>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load from localStorage safely on mount (client-only) to prevent hydration mismatches
+  // Load state safely on mount
   useEffect(() => {
     try {
-      const storedFavs = localStorage.getItem("jharva_favorites");
+      const storedFavs = localStorage.getItem("jharva_mens_favorites");
       if (storedFavs) setFavorites(JSON.parse(storedFavs));
 
-      const storedCart = localStorage.getItem("jharva_cart");
+      const storedCart = localStorage.getItem("jharva_mens_cart");
       if (storedCart) setCart(JSON.parse(storedCart));
     } catch (e) {
       console.error("Error reading localStorage:", e);
@@ -100,12 +101,12 @@ function CatalogPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem("jharva_favorites", JSON.stringify(favorites));
+    localStorage.setItem("jharva_mens_favorites", JSON.stringify(favorites));
   }, [favorites, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    localStorage.setItem("jharva_cart", JSON.stringify(cart));
+    localStorage.setItem("jharva_mens_cart", JSON.stringify(cart));
   }, [cart, isLoaded]);
 
   const toggleFavorite = (id: string, e?: React.MouseEvent) => {
@@ -115,7 +116,7 @@ function CatalogPage() {
     );
   };
 
-  const addToCart = (product: Product, size: string) => {
+  const addToCart = (product: MensProduct, size: string) => {
     setCart((prev) => {
       const idx = prev.findIndex((item) => item.product.id === product.id && item.size === size);
       if (idx > -1) {
@@ -152,10 +153,10 @@ function CatalogPage() {
     let listStr = "";
     let totalItems = 0;
     cart.forEach((item) => {
-      listStr += `\n- Code ${item.product.styleCode} (Size ${item.size}) x${item.quantity}`;
+      listStr += `\n- ${item.product.name} (Code: ${item.product.styleCode}) [Size ${item.size}] x${item.quantity}`;
       totalItems += item.quantity;
     });
-    const totalCost = totalItems * 99;
+    const totalCost = totalItems * 299;
 
     let customerInfo = "";
     if (customerName.trim()) {
@@ -165,7 +166,7 @@ function CatalogPage() {
       customerInfo += `Shipping Pin/City: ${customerPincode.trim()}\n`;
     }
 
-    const message = `Hello Jharva! I'd like to enquire about ordering these pieces:\n${customerInfo}${listStr}\n\nTotal items: ${totalItems} (₹${totalCost}). Please share availability and payment details.`;
+    const message = `Hello Jharva Men! I'd like to enquire about ordering these items:\n${customerInfo}${listStr}\n\nTotal items: ${totalItems} (₹${totalCost}). Please share availability and payment details.`;
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   };
 
@@ -176,7 +177,7 @@ function CatalogPage() {
         category === "Favorites"
           ? favorites.includes(p.id)
           : category === "All" || p.category === category;
-      const inQ = !q || p.styleCode.toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
+      const inQ = !q || p.styleCode.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
       const inSize = sizeFilter === "All" || p.sizes.includes(sizeFilter);
       return inCat && inQ && inSize;
     });
@@ -185,63 +186,101 @@ function CatalogPage() {
   useEffect(() => { setVisible(PAGE_SIZE); }, [query, category, sizeFilter]);
 
   return (
-    <div className="min-h-screen bg-cream text-ink">
-      <JsonLd />
-      <Hero />
-      <Marquee />
-      <section id="catalog" className="bg-cream pt-16 sm:pt-24 pb-24">
-        <CatalogHeader />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <CategoryPill active={category} onChange={setCategory} />
-          <SearchBar
-            query={query}
-            setQuery={setQuery}
-            sizeFilter={sizeFilter}
-            setSizeFilter={setSizeFilter}
-            count={filtered.length}
-          />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mt-8">
-            {filtered.slice(0, visible).map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                onOpen={() => setActive(p)}
-                isFav={favorites.includes(p.id)}
-                onFavToggle={(e) => toggleFavorite(p.id, e)}
-              />
-            ))}
-          </div>
-          {visible < filtered.length && (
-            <div className="flex justify-center mt-14">
-              <button
-                onClick={() => setVisible((v) => v + PAGE_SIZE)}
-                className="px-8 py-3.5 border border-maroon text-maroon hover:bg-maroon hover:text-cream transition-colors text-xs tracking-[0.25em] uppercase rounded-full"
-              >
-                Load more
-              </button>
-            </div>
-          )}
-          {filtered.length === 0 && (
-            <p className="text-center text-muted-foreground py-20 font-display text-2xl italic">
-              {category === "Favorites"
-                ? "You haven't favorited any pieces yet."
-                : `No pieces match “${query}”.`}
-            </p>
-          )}
+    <div className="min-h-screen bg-cream text-ink font-sans selection:bg-gold selection:text-maroon-deep">
+      <MensHeader />
+      <MensHero />
+      <MensMarquee />
+      <section id="catalog" className="pt-16 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <p className="text-xs tracking-[0.4em] uppercase text-gold font-semibold">Streetwear drop</p>
+          <h2 className="font-display text-4xl sm:text-5xl mt-3 text-maroon tracking-tight">Oversized Men's Gear</h2>
+          <div className="mx-auto mt-4 h-px w-16 bg-gold"></div>
+          <p className="mt-4 text-sm sm:text-base text-ink/75 max-w-xl mx-auto">
+            Heavy 220 GSM combed cotton. Vibrant front & back graphic prints. Flat <span className="text-maroon font-bold">₹299</span>.
+          </p>
         </div>
+
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex bg-card border border-border rounded-full p-1.5 overflow-x-auto max-w-full no-scrollbar no-scrollbar-webkit gap-1">
+            {MENS_CATEGORIES.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCategory(c)}
+                className={`shrink-0 px-4 sm:px-6 py-2.5 text-[11px] sm:text-xs tracking-[0.25em] uppercase rounded-full transition-all ${
+                  category === c
+                    ? "bg-maroon text-cream shadow-md font-semibold"
+                    : "text-ink/70 hover:text-maroon"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+            <button
+              onClick={() => setCategory("Favorites")}
+              className={`shrink-0 px-4 sm:px-6 py-2.5 text-[11px] sm:text-xs tracking-[0.25em] uppercase rounded-full transition-all flex items-center gap-1.5 ${
+                category === "Favorites"
+                  ? "bg-maroon text-cream shadow-md font-semibold"
+                  : "text-ink/70 hover:text-maroon"
+              }`}
+            >
+              <Heart className={`w-3.5 h-3.5 ${category === "Favorites" ? "fill-cream text-cream" : "text-maroon"}`} strokeWidth={2} />
+              Wishlist ({favorites.length})
+            </button>
+          </div>
+        </div>
+
+        <MensSearchBar
+          query={query}
+          setQuery={setQuery}
+          sizeFilter={sizeFilter}
+          setSizeFilter={setSizeFilter}
+          count={filtered.length}
+        />
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mt-8">
+          {filtered.slice(0, visible).map((p) => (
+            <MensProductCard
+              key={p.id}
+              product={p}
+              onOpen={() => setActive(p)}
+              isFav={favorites.includes(p.id)}
+              onFavToggle={(e) => toggleFavorite(p.id, e)}
+            />
+          ))}
+        </div>
+
+        {visible < filtered.length && (
+          <div className="flex justify-center mt-14">
+            <button
+              onClick={() => setVisible((v) => v + PAGE_SIZE)}
+              className="px-8 py-3.5 border border-maroon text-maroon hover:bg-maroon hover:text-cream transition-colors text-xs tracking-[0.25em] uppercase rounded-full font-bold"
+            >
+              Load More
+            </button>
+          </div>
+        )}
+
+        {filtered.length === 0 && (
+          <p className="text-center text-muted-foreground py-20 italic text-lg font-display">
+            {category === "Favorites"
+              ? "Your wishlist is empty."
+              : `No streetwear pieces found for "${query}".`}
+          </p>
+        )}
       </section>
-      <About />
-      <Footer />
-      <WhatsAppFab />
+
+      <MensFooter />
       <CartFloatingButton count={cart.reduce((a, c) => a + c.quantity, 0)} onClick={() => setIsCartOpen(true)} />
-      <ProductDialog
+      
+      <MensProductDialog
         product={active}
         onClose={() => setActive(null)}
         isFav={active ? favorites.includes(active.id) : false}
         onFavToggle={() => active && toggleFavorite(active.id)}
         onAddToCart={addToCart}
       />
-      <EnquiryCartDrawer
+
+      <MensCartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         cart={cart}
@@ -268,37 +307,34 @@ function CatalogPage() {
   );
 }
 
-/* ───────────────────────── HERO ───────────────────────── */
+/* ───────────────────────── HEADER ───────────────────────── */
 
-function Hero() {
+function MensHeader() {
   const { user, isAdmin, signOut } = useAuth();
   return (
-    <section className="relative hero-vignette text-cream overflow-hidden">
-      {/* Top bar */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-3">
-          <span className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-cream/95 ring-2 ring-gold/70 shadow-lg shadow-black/30 font-display text-maroon text-2xl font-bold select-none">
-            J
-          </span>
+    <div className="sticky top-0 z-40 w-full bg-cream/90 backdrop-blur-md border-b border-border">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-3">
+          <span className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-cream/95 ring-2 ring-gold/70 shadow-lg shadow-black/30 font-display text-maroon text-2xl font-bold select-none">J</span>
           <span className="flex flex-col leading-none">
             <span className="font-display text-2xl sm:text-3xl text-gold tracking-wide">Jharva</span>
             <span className="text-[9px] sm:text-[10px] tracking-[0.4em] uppercase text-cream/70 mt-1">Fashion</span>
           </span>
-        </a>
-
-        {/* Drop Toggle Navigation */}
+        </Link>
+        
+        {/* Navigation toggling between Womens (₹99) and Mens (₹299) */}
         <div className="flex items-center gap-2 border border-gold/40 rounded-full bg-maroon-deep/30 backdrop-blur p-1">
+          <Link
+            to="/"
+            className="px-4 py-1.5 text-xs font-semibold rounded-full text-cream/80 hover:text-cream transition-colors"
+          >
+            Women's Drop (₹99)
+          </Link>
           <button
             className="px-4 py-1.5 text-xs font-bold rounded-full bg-gold text-maroon-deep shadow-sm"
           >
-            Women's Drop (₹99)
-          </button>
-          <Link
-            to="/mens"
-            className="px-4 py-1.5 text-xs font-semibold rounded-full text-cream/80 hover:text-cream transition-colors"
-          >
             Men's Drop (₹299)
-          </Link>
+          </button>
         </div>
 
         <div className="flex items-center gap-3 text-gold">
@@ -312,7 +348,7 @@ function Hero() {
                   Admin Panel
                 </Link>
               )}
-              <span className="text-xs text-cream/80 max-w-[100px] truncate hidden md:inline">
+              <span className="text-xs text-ink/80 max-w-[100px] truncate hidden md:inline">
                 {user.user_metadata?.full_name || user.email}
               </span>
               <button
@@ -325,79 +361,67 @@ function Hero() {
           ) : (
             <Link
               to="/login"
-              search={{ redirect: "/" }}
+              search={{ redirect: "/mens" }}
               className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider text-gold hover:text-gold-soft border border-gold/40 px-4 py-2 rounded-full hover:bg-gold/10 transition"
             >
-              <User className="w-4 h-4" />
-              <span>Login</span>
+              <User className="w-4 h-4 text-maroon" />
+              <span className="text-maroon">Login</span>
             </Link>
           )}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Headline */}
-      <div className="relative z-10 mx-auto max-w-3xl px-6 pt-10 sm:pt-16 pb-20 sm:pb-28 text-center">
+/* ───────────────────────── HERO ───────────────────────── */
+
+function MensHero() {
+  return (
+    <section className="relative hero-vignette text-cream overflow-hidden">
+      <div className="relative z-10 mx-auto max-w-3xl px-6 pt-16 pb-20 sm:pb-28 text-center">
         <div className="inline-flex items-center gap-2 px-5 py-2 border border-gold/60 rounded-full text-gold text-[11px] sm:text-xs tracking-[0.3em] uppercase animate-fade-in">
-          <Sparkles className="w-3.5 h-3.5" /> Drop 03 · Winter 26
+          <Sparkles className="w-3.5 h-3.5" /> Drop 01 · Anime Streetwear
         </div>
-
         <h1 className="mt-8 font-display leading-[0.95] animate-fade-in">
-          <span className="block text-5xl sm:text-7xl lg:text-8xl text-cream">Affordable</span>
-          <span className="block text-5xl sm:text-7xl lg:text-8xl italic text-gold font-medium mt-1">Fashion</span>
-          <span className="block text-5xl sm:text-7xl lg:text-8xl text-cream mt-1">That Looks</span>
-          <span className="block text-5xl sm:text-7xl lg:text-8xl italic text-gold font-medium mt-1">Premium</span>
+          <span className="block text-5xl sm:text-7xl lg:text-8xl text-cream">Premium</span>
+          <span className="block text-5xl sm:text-7xl lg:text-8xl italic text-gold font-medium mt-1">Mens Drop</span>
         </h1>
-
         <p className="mt-8 text-cream/80 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-          Trendy outfits curated for modern everyday style. Made in India. Loved on Instagram.
+          Heavyweight anime oversized tees & joggers. Curated for premium comfort. Flat ₹299 drop.
         </p>
-
-        <div className="mt-10 flex flex-col items-center gap-4">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="#catalog"
             className="group inline-flex items-center gap-3 gold-gradient text-maroon-deep px-10 py-4 rounded-full text-xs tracking-[0.3em] uppercase font-semibold shadow-lg shadow-black/30 hover:shadow-xl transition-all hover:-translate-y-0.5"
           >
-            Shop Now <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            Shop now <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </a>
-          <a
-            href="#catalog"
+          <Link
+            to="/"
             className="inline-flex items-center gap-3 border border-gold/60 text-gold px-10 py-3.5 rounded-full text-xs tracking-[0.3em] uppercase hover:bg-gold/10 transition-colors"
           >
-            Explore Collection
-          </a>
-        </div>
-
-        {/* Stats */}
-        <div className="mt-14 grid grid-cols-3 gap-6 max-w-md mx-auto">
-          <Stat k="10k+" l="Happy Buyers" />
-          <Stat k="4.8★" l="Avg Rating" />
-          <Stat k={`${PRODUCTS.length}+`} l="Pieces" />
+            Explore Women's Drop (₹99)
+          </Link>
         </div>
       </div>
     </section>
   );
 }
 
-function Stat({ k, l }: { k: string; l: string }) {
-  return (
-    <div className="text-center">
-      <p className="font-display text-3xl sm:text-4xl text-gold">{k}</p>
-      <p className="mt-1 text-[10px] tracking-[0.25em] uppercase text-cream/60">{l}</p>
-    </div>
-  );
-}
-
 /* ───────────────────────── MARQUEE ───────────────────────── */
 
-function Marquee() {
-  const items = ["Flat ₹99", "MRP ₹299", "Limited Drop", "Enquire by Style Code", "Pan-India Delivery"];
-  const row = [...items, ...items, ...items, ...items];
+function MensMarquee() {
   return (
     <div className="bg-maroon-deep text-gold border-y border-gold/20 overflow-hidden">
       <div className="flex whitespace-nowrap marquee py-3 text-xs tracking-[0.3em] uppercase">
-        {row.map((t, i) => (
-          <span key={i} className="px-8 flex items-center gap-8 shrink-0">
-            {t}<span className="text-gold/60">✦</span>
+        {[...Array(4)].map((_, i) => (
+          <span key={i} className="px-8 shrink-0 flex items-center gap-8">
+            Flat ₹299 <span className="text-gold/60">✦</span>
+            MRP ₹799 <span className="text-gold/60">✦</span>
+            Anime Streetwear <span className="text-gold/60">✦</span>
+            220 GSM Cotton <span className="text-gold/60">✦</span>
+            Pan-India Delivery <span className="text-gold/60">✦</span>
           </span>
         ))}
       </div>
@@ -405,51 +429,9 @@ function Marquee() {
   );
 }
 
-/* ───────────────────────── CATALOG ───────────────────────── */
+/* ───────────────────────── SEARCH & FILTER ───────────────────────── */
 
-function CatalogHeader() {
-  return (
-    <div className="text-center px-4 mb-10 sm:mb-14">
-      <p className="text-xs sm:text-sm tracking-[0.4em] uppercase text-gold font-medium">Our Collection</p>
-      <h2 className="font-display text-5xl sm:text-6xl lg:text-7xl text-maroon mt-4">Trending Styles</h2>
-      <div className="mx-auto mt-5 h-px w-16 bg-gold" />
-      <p className="mt-6 text-base sm:text-lg text-ink/70 max-w-xl mx-auto">
-        Handpicked everyday luxe — flat <span className="text-maroon font-semibold">₹99</span> on every piece.
-      </p>
-    </div>
-  );
-}
-
-function CategoryPill({ active, onChange }: { active: string; onChange: (c: string) => void }) {
-  const tabs = [...CATEGORIES, "Favorites"];
-  return (
-    <div className="flex justify-center">
-      <div className="inline-flex bg-card border border-border rounded-full p-1.5 overflow-x-auto max-w-full no-scrollbar no-scrollbar-webkit gap-1">
-        {tabs.map((c) => (
-          <button
-            key={c}
-            onClick={() => onChange(c)}
-            className={`shrink-0 px-4 sm:px-6 py-2.5 text-[11px] sm:text-xs tracking-[0.25em] uppercase rounded-full transition-all flex items-center gap-1.5 ${
-              active === c
-                ? "bg-maroon text-cream shadow-md"
-                : "text-ink/70 hover:text-maroon"
-            }`}
-          >
-            {c === "Favorites" && (
-              <Heart 
-                className={`w-3.5 h-3.5 ${active === "Favorites" ? "fill-cream text-cream" : "text-maroon"}`} 
-                strokeWidth={2}
-              />
-            )}
-            {c}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SearchBar({
+function MensSearchBar({
   query,
   setQuery,
   sizeFilter,
@@ -462,21 +444,21 @@ function SearchBar({
   setSizeFilter: (s: string) => void;
   count: number;
 }) {
-  const sizes = ["All", "S", "M", "L", "XL"];
+  const sizes = ["All", "S", "M", "L", "XL", "XXL"];
   return (
-    <div className="mt-8 flex flex-col md:flex-row items-center gap-4 md:justify-between w-full">
+    <div className="mt-8 flex flex-col md:flex-row items-center gap-4 md:justify-between w-full border-t border-b border-border py-6">
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:max-w-2xl">
-        {/* Search Input */}
+        {/* Search */}
         <div className="flex items-center bg-card border border-border focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20 rounded-full px-5 h-12 w-full sm:max-w-sm transition-all">
           <Search className="w-4 h-4 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by style code (e.g. JH-007)"
+            placeholder="Search catalog or style code..."
             className="bg-transparent outline-none px-3 text-sm flex-1 placeholder:text-muted-foreground"
           />
         </div>
-        {/* Size Selector */}
+        {/* Size Selection */}
         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar py-1">
           <span className="text-[10px] tracking-wider text-ink/50 uppercase whitespace-nowrap mr-1">Size:</span>
           {sizes.map((s) => (
@@ -494,70 +476,69 @@ function SearchBar({
           ))}
         </div>
       </div>
-      <p className="text-[11px] tracking-[0.25em] uppercase text-ink/60 whitespace-nowrap mt-2 md:mt-0">
-        {count} piece{count === 1 ? "" : "s"} · all at ₹99
+      <p className="text-[11px] tracking-[0.25em] uppercase text-ink/60 whitespace-nowrap">
+        {count} Style{count === 1 ? "" : "s"} Available
       </p>
     </div>
   );
 }
 
-function ProductCard({
+/* ───────────────────────── PRODUCT CARD ───────────────────────── */
+
+function MensProductCard({
   product,
   onOpen,
   isFav,
   onFavToggle,
 }: {
-  product: Product;
+  product: MensProduct;
   onOpen: () => void;
   isFav: boolean;
   onFavToggle: (e: React.MouseEvent) => void;
 }) {
+  const [hovered, setHovered] = useState(false);
   const discount = Math.round((1 - product.price / product.mrp) * 100);
+
   return (
-    <article className="group card-cv bg-card rounded-2xl overflow-hidden border border-border shadow-sm hover:shadow-xl transition-shadow flex flex-col">
+    <article
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="group bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow flex flex-col"
+    >
       <div className="relative aspect-[3/4] overflow-hidden bg-secondary">
         <button onClick={onOpen} className="block w-full h-full text-left">
           <img
-            src={product.image}
+            src={hovered && product.backImage ? product.backImage : product.frontImage}
             alt={product.name}
             loading="lazy"
-            decoding="async"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         </button>
         {/* Badges */}
-        <span
-          className={`absolute top-3 left-3 text-[9px] sm:text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-full font-semibold pointer-events-none select-none z-10 ${
-            product.badge === "BESTSELLER"
-              ? "bg-gold text-maroon-deep"
-              : product.badge === "TRENDING"
-              ? "bg-cream text-maroon-deep border border-gold/40"
-              : "bg-maroon-deep/85 text-gold backdrop-blur"
-          }`}
-        >
-          {product.badge}
+        <span className="absolute top-3 left-3 text-[9px] sm:text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-full font-bold bg-gold text-maroon-deep shadow-md">
+          {product.category}
         </span>
-        <span className="absolute top-3 right-3 bg-maroon text-cream text-[9px] sm:text-[10px] tracking-[0.15em] uppercase px-2.5 py-1.5 rounded-full font-semibold shadow-md pointer-events-none select-none z-10">
+        <span className="absolute top-3 right-3 bg-maroon text-cream text-[9px] sm:text-[10px] tracking-[0.15em] uppercase px-2.5 py-1.5 rounded-full font-semibold shadow-md">
           Save {discount}%
         </span>
         <button
           onClick={onFavToggle}
-          aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+          aria-label={isFav ? "Remove from wishlist" : "Add to wishlist"}
           className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-maroon-deep/85 text-gold flex items-center justify-center backdrop-blur hover:scale-110 active:scale-95 transition-transform z-10"
         >
           <Heart className={`w-4 h-4 ${isFav ? "fill-gold text-gold" : "text-gold"}`} strokeWidth={1.5} />
         </button>
       </div>
+
       <button onClick={onOpen} className="block w-full text-left p-3 sm:p-4 flex-1">
-        <p className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase text-gold font-semibold">{product.category}</p>
-        <h3 className="font-display text-lg sm:text-xl text-ink mt-1 leading-snug line-clamp-1">{product.name}</h3>
-        <p className="text-[9px] tracking-[0.2em] uppercase text-ink/55 mt-0.5">{product.styleCode}</p>
+        <p className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase text-gold font-semibold">{product.baseColor} · {product.styleCode}</p>
+        <h3 className="font-display text-lg sm:text-xl text-ink mt-1 leading-snug line-clamp-1 font-bold">{product.name}</h3>
         <div className="mt-2.5 flex items-end justify-between gap-2">
           <div className="flex flex-col leading-none">
             <span className="text-[9px] tracking-[0.25em] uppercase text-ink/45 line-through">MRP ₹{product.mrp}</span>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-[10px] tracking-[0.2em] uppercase text-maroon/70 font-medium">Offer</span>
-              <span className="font-display text-2xl sm:text-3xl text-maroon font-bold">₹{product.price}</span>
+              <span className="font-display text-2xl text-maroon font-bold">₹{product.price}</span>
             </div>
           </div>
           <span className="text-[9px] sm:text-[10px] tracking-[0.2em] uppercase bg-gold/20 text-maroon-deep px-2 py-1 rounded-full font-semibold whitespace-nowrap">
@@ -565,9 +546,10 @@ function ProductCard({
           </span>
         </div>
       </button>
+
       <button
         onClick={onOpen}
-        className="m-3 sm:m-4 mt-0 inline-flex items-center justify-center gap-2 bg-maroon text-cream py-3 rounded-full text-[10px] sm:text-[11px] tracking-[0.25em] uppercase hover:bg-maroon-deep transition-colors"
+        className="m-3 sm:m-4 mt-0 inline-flex items-center justify-center gap-2 bg-maroon hover:bg-maroon-deep text-cream py-3 rounded-full text-[10px] sm:text-[11px] tracking-[0.25em] uppercase font-bold transition-colors"
       >
         <ShoppingBag className="w-3.5 h-3.5" /> Enquire / Add Size
       </button>
@@ -575,27 +557,33 @@ function ProductCard({
   );
 }
 
-/* ───────────────────────── DIALOG ───────────────────────── */
+/* ───────────────────────── PRODUCT DETAILS DIALOG ───────────────────────── */
 
-function ProductDialog({
+function MensProductDialog({
   product,
   onClose,
   isFav,
   onFavToggle,
   onAddToCart,
 }: {
-  product: Product | null;
+  product: MensProduct | null;
   onClose: () => void;
   isFav: boolean;
   onFavToggle: () => void;
-  onAddToCart: (product: Product, size: string) => void;
+  onAddToCart: (product: MensProduct, size: string) => void;
 }) {
   if (!product) return null;
-  const [selectedSize, setSelectedSize] = useState<string>("M");
+  const [selectedSize, setSelectedSize] = useState<string>("L"); // L is default for mens oversized fit
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [activeImage, setActiveImage] = useState<"front" | "back">("front");
+
+  useEffect(() => {
+    setActiveImage("front");
+  }, [product]);
 
   const getWhatsAppLink = () => {
     if (!WHATSAPP_NUMBER) return "#";
-    const message = `Hello Jharva! I'm interested in Style Code ${product.styleCode} in Size ${selectedSize} (₹99). Please share availability.`;
+    const message = `Hello Jharva Men! I'm interested in the ${product.name} (Code: ${product.styleCode}) in Size ${selectedSize} (₹299). Please share availability.`;
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   };
 
@@ -603,24 +591,61 @@ function ProductDialog({
 
   return (
     <Dialog open={!!product} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl w-[calc(100vw-1.5rem)] sm:w-full p-0 overflow-hidden bg-card border-border rounded-2xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[calc(100vw-1.5rem)] sm:w-full p-0 overflow-hidden bg-card border-border rounded-2xl max-h-[92vh] overflow-y-auto text-ink">
         <DialogTitle className="sr-only">{product.name}</DialogTitle>
         <DialogDescription className="sr-only">{product.description}</DialogDescription>
+        
         <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 z-20 p-2 rounded-full bg-cream/95 hover:bg-cream shadow-md">
           <X className="w-4 h-4" />
         </button>
+
         <div className="grid md:grid-cols-2">
-          <div className="bg-secondary">
-            <div className="aspect-[3/4] md:aspect-auto md:h-full overflow-hidden max-h-[55vh] md:max-h-none">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+          {/* Media Section */}
+          <div className="bg-secondary flex flex-col justify-between">
+            <div className="aspect-[3/4] md:aspect-auto md:h-[550px] overflow-hidden relative">
+              <img
+                src={activeImage === "front" ? product.frontImage : product.backImage}
+                alt={product.name}
+                className="w-full h-full object-cover transition-all duration-300"
+              />
+              {/* Back graphic tip overlay */}
+              {activeImage === "front" && product.backImage && (
+                <div className="absolute bottom-4 left-4 bg-cream/95 border border-border px-3 py-1.5 rounded-md text-[10px] text-muted-foreground pointer-events-none uppercase tracking-wider shadow-sm">
+                  ✦ Flip to see back print
+                </div>
+              )}
             </div>
+            {/* Front/Back toggle buttons */}
+            {product.backImage && (
+              <div className="flex border-t border-border bg-card">
+                <button
+                  onClick={() => setActiveImage("front")}
+                  className={`flex-1 py-3 text-xs uppercase tracking-wider font-bold border-r border-border ${
+                    activeImage === "front" ? "text-maroon bg-maroon/5" : "text-ink/60 hover:text-maroon"
+                  }`}
+                >
+                  Front View
+                </button>
+                <button
+                  onClick={() => setActiveImage("back")}
+                  className={`flex-1 py-3 text-xs uppercase tracking-wider font-bold ${
+                    activeImage === "back" ? "text-maroon bg-maroon/5" : "text-ink/60 hover:text-maroon"
+                  }`}
+                >
+                  Back Print
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Details Section */}
           <div className="p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <p className="text-[10px] tracking-[0.3em] uppercase text-gold font-semibold">
                 {product.category} · {product.styleCode}
               </p>
-              <h3 className="font-display text-3xl sm:text-4xl mt-2 text-maroon">{product.name}</h3>
+              <h3 className="font-display text-3xl sm:text-4xl mt-2 text-maroon font-bold">{product.name}</h3>
+              
               <div className="mt-5 rounded-2xl border border-gold/40 bg-gold/10 p-4 sm:p-5">
                 <div className="flex items-baseline justify-between gap-3 flex-wrap">
                   <div className="flex flex-col">
@@ -631,27 +656,38 @@ function ProductDialog({
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-[10px] tracking-[0.25em] uppercase bg-maroon text-cream px-2.5 py-1 rounded-full font-semibold">
+                    <span className="text-[10px] tracking-[0.25em] bg-maroon text-cream px-2.5 py-1 rounded-full font-semibold">
                       {discount}% OFF
                     </span>
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-maroon-deep/80 font-medium">
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-maroon-deep font-medium">
                       You save ₹{product.mrp - product.price}
                     </span>
                   </div>
                 </div>
               </div>
-              <p className="mt-5 text-sm leading-relaxed text-ink/70">{product.description}</p>
+
+              <p className="mt-5 text-sm leading-relaxed text-ink/75">{product.description}</p>
+              
+              {/* Size Selectors & Guide */}
               <div className="mt-6">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-ink/60 mb-2">Select Size</p>
-                <div className="flex flex-wrap gap-2.5">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-ink/65">Select Size</p>
+                  <button
+                    onClick={() => setShowSizeGuide(true)}
+                    className="text-[10px] tracking-wider text-maroon hover:underline flex items-center gap-1 uppercase font-semibold"
+                  >
+                    <Info className="w-3.5 h-3.5" /> Size Guide
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
                   {product.sizes.map((s) => (
                     <button
                       key={s}
                       onClick={() => setSelectedSize(s)}
                       className={`px-4 py-2 border rounded-full text-xs transition-all uppercase tracking-wider ${
                         selectedSize === s
-                          ? "bg-maroon text-cream border-maroon shadow-md font-semibold"
-                          : "border-border hover:border-maroon text-ink"
+                          ? "bg-maroon text-cream border-maroon font-bold shadow-md"
+                          : "border-border hover:border-maroon text-ink bg-card"
                       }`}
                     >
                       {s}
@@ -660,202 +696,101 @@ function ProductDialog({
                 </div>
               </div>
             </div>
+
             <div>
               <div className="mt-8 grid grid-cols-2 gap-3">
                 <a
                   href={getWhatsAppLink()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 gold-gradient text-maroon-deep py-4 px-4 rounded-full text-[11px] tracking-[0.25em] uppercase font-semibold shadow-md hover:-translate-y-0.5 transition-all text-center"
+                  className="inline-flex items-center justify-center gap-2 gold-gradient text-maroon-deep py-3.5 px-4 rounded-full text-xs tracking-[0.25em] uppercase font-bold shadow-md hover:-translate-y-0.5 transition-all text-center"
                 >
-                  <MessageCircle className="w-3.5 h-3.5" /> Enquire
+                  <MessageCircle className="w-4 h-4" /> Enquire
                 </a>
                 <button
                   onClick={() => {
                     onAddToCart(product, selectedSize);
                     onClose();
                   }}
-                  className="inline-flex items-center justify-center gap-2 bg-maroon text-cream hover:bg-maroon-deep py-4 px-4 rounded-full text-[11px] tracking-[0.25em] uppercase font-semibold shadow-md hover:-translate-y-0.5 transition-all"
+                  className="inline-flex items-center justify-center gap-2 bg-maroon hover:bg-maroon-deep text-cream py-3.5 px-4 rounded-full text-xs tracking-[0.25em] uppercase font-bold shadow-md hover:-translate-y-0.5 transition-all"
                 >
-                  <ShoppingBag className="w-3.5 h-3.5" /> Add to List
+                  <ShoppingBag className="w-4 h-4" /> Add to List
                 </button>
               </div>
-              <div className="mt-3 flex items-center justify-between text-[10px] tracking-[0.25em] uppercase text-ink/55 px-1">
+              <div className="mt-4 flex items-center justify-between text-[10px] tracking-[0.25em] uppercase text-ink/55 px-1 border-t border-border pt-3">
                 <span>Code: {product.styleCode}</span>
                 <button onClick={onFavToggle} className="hover:text-maroon flex items-center gap-1.5 transition-colors">
-                  <Heart className={`w-3.5 h-3.5 ${isFav ? "fill-maroon text-maroon" : "text-ink/60"}`} strokeWidth={isFav ? 0 : 1.5} />
-                  {isFav ? "Favorited" : "Add Favorite"}
+                  <Heart className={`w-3.5 h-3.5 ${isFav ? "fill-maroon text-maroon" : "text-ink/65"}`} strokeWidth={isFav ? 0 : 1.5} />
+                  {isFav ? "In Wishlist" : "Add to Wishlist"}
                 </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Nested Size Guide Dialog */}
+        <Dialog open={showSizeGuide} onOpenChange={(o) => !o && setShowSizeGuide(false)}>
+          <DialogContent className="max-w-md w-[calc(100vw-2rem)] p-6 bg-card border border-border rounded-xl text-ink z-[60]">
+            <DialogTitle className="font-display text-2xl text-maroon uppercase tracking-wide">Oversized Fit Guide</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs">Recommended sizes based on standard chest & length measurements.</DialogDescription>
+            
+            <div className="mt-4 overflow-hidden border border-border rounded-lg">
+              <table className="w-full text-left border-collapse text-sm text-ink">
+                <thead>
+                  <tr className="bg-secondary border-b border-border text-ink/60 text-xs uppercase tracking-wider">
+                    <th className="p-3">Size</th>
+                    <th className="p-3">Chest Width (inch)</th>
+                    <th className="p-3">Length (inch)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr>
+                    <td className="p-3 font-bold text-maroon">S</td>
+                    <td className="p-3">42"</td>
+                    <td className="p-3">27"</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-bold text-maroon">M</td>
+                    <td className="p-3">44"</td>
+                    <td className="p-3">28"</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-bold text-maroon">L</td>
+                    <td className="p-3">46"</td>
+                    <td className="p-3">29"</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-bold text-maroon">XL</td>
+                    <td className="p-3">48"</td>
+                    <td className="p-3">30"</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-bold text-maroon">XXL</td>
+                    <td className="p-3">50"</td>
+                    <td className="p-3">31"</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <p className="mt-4 text-[10px] text-muted-foreground italic leading-relaxed">
+              * Note: These are drop-shoulder relaxed shirts. If you prefer a regular fit, order one size down.
+            </p>
+            
+            <button
+              onClick={() => setShowSizeGuide(false)}
+              className="mt-5 w-full bg-secondary border border-border text-ink py-2.5 rounded-lg text-xs uppercase tracking-wider font-bold hover:bg-border transition-colors"
+            >
+              Close Guide
+            </button>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
 }
 
-/* ───────────────────────── ABOUT / FOOTER ───────────────────────── */
-
-function About() {
-  return (
-    <section id="about" className="bg-card border-y border-border">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-20 sm:py-24 text-center">
-        <p className="text-xs tracking-[0.4em] uppercase text-gold font-medium">The Story</p>
-        <h2 className="font-display text-4xl sm:text-5xl mt-4 leading-tight text-maroon">
-          Quiet craftsmanship,<br /> generously priced.
-        </h2>
-        <p className="mt-6 text-ink/70 leading-relaxed max-w-2xl mx-auto">
-          Jharva is a small atelier that believes everyday clothing can feel considered. Each
-          piece in the ₹99 drop is finished by hand in limited quantities — soft fabrics, honest
-          cuts, and the small details that make a garment worth keeping.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function Footer() {
-  const waMsg = encodeURIComponent("Hello Jharva! I'd like to know more about your ₹99 collection.");
-  const waLink = WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}` : "#";
-  return (
-    <footer id="footer" className="bg-maroon-deep text-cream">
-      {/* Contact strip */}
-      <div className="border-b border-cream/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-4 rounded-2xl bg-cream/5 hover:bg-cream/10 border border-cream/10 hover:border-gold/40 p-4 sm:p-5 transition-all"
-          >
-            <span className="shrink-0 w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center">
-              <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-gold">WhatsApp</p>
-              <p className="text-sm sm:text-base text-cream font-medium mt-0.5 truncate">{WHATSAPP_DISPLAY}</p>
-            </div>
-          </a>
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-4 rounded-2xl bg-cream/5 hover:bg-cream/10 border border-cream/10 hover:border-gold/40 p-4 sm:p-5 transition-all"
-          >
-            <span className="shrink-0 w-11 h-11 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center">
-              <Instagram className="w-5 h-5" strokeWidth={1.8} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-gold">Instagram</p>
-              <p className="text-sm sm:text-base text-cream font-medium mt-0.5 truncate">@{INSTAGRAM_HANDLE}</p>
-            </div>
-          </a>
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="group flex items-center gap-4 rounded-2xl bg-cream/5 hover:bg-cream/10 border border-cream/10 hover:border-gold/40 p-4 sm:p-5 transition-all"
-          >
-            <span className="shrink-0 w-11 h-11 rounded-full bg-gold text-maroon-deep flex items-center justify-center">
-              <Mail className="w-5 h-5" strokeWidth={1.8} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-gold">Email</p>
-              <p className="text-sm sm:text-base text-cream font-medium mt-0.5 truncate">{CONTACT_EMAIL}</p>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-1">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-cream ring-2 ring-gold/70 font-display text-maroon text-2xl font-bold select-none">
-              J
-            </span>
-            <span className="flex flex-col leading-none">
-              <span className="font-display text-3xl text-gold tracking-wide">Jharva</span>
-              <span className="text-[10px] tracking-[0.4em] uppercase text-cream/70 mt-1">Fashion</span>
-            </span>
-          </div>
-          <p className="mt-5 text-sm text-cream/70 leading-relaxed max-w-sm">
-            Affordable fashion that looks premium. Flat ₹99 on every piece — MRP ₹299. Made in India, loved on Instagram.
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-4">Shop</p>
-          <ul className="space-y-2.5 text-sm text-cream/80">
-            <li><a href="#catalog" className="hover:text-gold transition-colors">Catalog</a></li>
-            <li><a href="#about" className="hover:text-gold transition-colors">About</a></li>
-          </ul>
-        </div>
-        <div>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-4">Visit</p>
-          <p className="inline-flex items-start gap-2.5 text-sm text-cream/80">
-            <MapPin className="w-4 h-4 mt-0.5 shrink-0" strokeWidth={1.6} />
-            <span>{LOCATION}<br /><span className="text-cream/55 text-xs">DM or WhatsApp us with a style code to order.</span></span>
-          </p>
-        </div>
-      </div>
-      <div className="border-t border-cream/10 py-5 text-center text-[10px] tracking-[0.3em] uppercase text-cream/50">
-        © {new Date().getFullYear()} Jharva Fashion · {LOCATION}
-      </div>
-    </footer>
-  );
-}
-
-function WhatsAppFab() {
-  const msg = encodeURIComponent("Hello Jharva! I'd like to know more about your ₹99 collection.");
-  const link = WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}` : null;
-  if (!link) return null;
-  return (
-    <a
-      aria-label="Chat on WhatsApp"
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2.5 pl-2 pr-4 py-2 rounded-full bg-[#25D366] text-white shadow-xl shadow-black/30 hover:scale-105 transition-transform"
-    >
-      <span className="relative flex w-10 h-10 items-center justify-center">
-        <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-60" />
-        <span className="relative w-10 h-10 rounded-full bg-white text-[#25D366] flex items-center justify-center">
-          <MessageCircle className="w-5 h-5" strokeWidth={2} />
-        </span>
-      </span>
-      <span className="text-xs font-semibold tracking-wide hidden sm:inline">Chat on WhatsApp</span>
-    </a>
-  );
-}
-
-/* ───────────────────────── JSON-LD ───────────────────────── */
-
-function JsonLd() {
-  const data = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "Jharva Fashion — ₹99 Drop",
-    numberOfItems: PRODUCTS.length,
-    itemListElement: PRODUCTS.slice(0, 20).map((p, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      item: {
-        "@type": "Product",
-        name: p.name,
-        sku: p.styleCode,
-        category: p.category,
-        image: p.image,
-        offers: {
-          "@type": "Offer",
-          price: p.price,
-          priceCurrency: "INR",
-          availability: "https://schema.org/InStock",
-        },
-      },
-    })),
-  };
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
-}
-
-/* ───────────────────────── PM IMPROVEMENTS: CART / SELECTION ───────────────────────── */
+/* ───────────────────────── FLOATING CART & DRAWER ───────────────────────── */
 
 function CartFloatingButton({ count, onClick }: { count: number; onClick: () => void }) {
   if (count === 0) return null;
@@ -863,10 +798,10 @@ function CartFloatingButton({ count, onClick }: { count: number; onClick: () => 
     <button
       onClick={onClick}
       aria-label="View selection list"
-      className="fixed bottom-5 left-5 z-40 inline-flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full gold-gradient text-maroon-deep shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-transform"
+      className="fixed bottom-5 left-5 z-40 inline-flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full gold-gradient text-maroon-deep shadow-xl hover:scale-105 transition-transform"
     >
       <span className="relative flex w-9 h-9 items-center justify-center bg-maroon-deep text-gold rounded-full">
-        <ShoppingBag className="w-4.5 h-4.5" strokeWidth={2} />
+        <ShoppingBag className="w-4.5 h-4.5" strokeWidth={2.5} />
         <span className="absolute -top-1.5 -right-1.5 bg-maroon text-cream text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-gold shadow-md animate-bounce">
           {count}
         </span>
@@ -876,7 +811,7 @@ function CartFloatingButton({ count, onClick }: { count: number; onClick: () => 
   );
 }
 
-function EnquiryCartDrawer({
+function MensCartDrawer({
   isOpen,
   onClose,
   cart,
@@ -901,7 +836,7 @@ function EnquiryCartDrawer({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  cart: Array<{ product: Product; size: string; quantity: number }>;
+  cart: Array<{ product: MensProduct; size: string; quantity: number }>;
   onUpdateQty: (id: string, size: string, delta: number) => void;
   onRemove: (id: string, size: string) => void;
   onSubmitLink: string;
@@ -929,7 +864,7 @@ function EnquiryCartDrawer({
   if (!isOpen) return null;
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = totalItems * 99;
+  const totalPrice = totalItems * 299;
 
   const handlePlaceWebsiteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -965,7 +900,7 @@ function EnquiryCartDrawer({
             product_id: item.product.styleCode,
             size: item.size,
             qty: item.quantity,
-            image: item.product.image,
+            image: item.product.frontImage,
           })),
           address: {
             full_name: customerName.trim(),
@@ -994,12 +929,13 @@ function EnquiryCartDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" />
-      {/* Drawer content */}
+      
+      {/* Drawer */}
       <div className="relative z-10 w-full max-w-md h-full bg-card border-l border-border shadow-2xl flex flex-col animate-slide-in text-ink">
         <div className="p-6 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-maroon" />
-            <h3 className="font-display text-2xl text-maroon uppercase tracking-wide">Enquiry List</h3>
+            <h3 className="font-display text-2xl text-maroon uppercase tracking-wide">Men's List</h3>
             <span className="bg-gold/20 text-maroon-deep text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
               {totalItems} items
             </span>
@@ -1009,13 +945,14 @@ function EnquiryCartDrawer({
           </button>
         </div>
 
+        {/* Cart items list */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-20">
               <ShoppingBag className="w-12 h-12 text-ink/20 stroke-1 mb-4" />
               <p className="font-display text-xl text-ink/75 uppercase tracking-wider">Your list is empty</p>
               <p className="text-xs text-muted-foreground mt-2 max-w-xs leading-relaxed">
-                Add pieces from our trending catalog and checkout via website or WhatsApp.
+                Browse our anime tees and checkout via website or WhatsApp.
               </p>
             </div>
           ) : (
@@ -1074,7 +1011,7 @@ function EnquiryCartDrawer({
                   </p>
                   <Link
                     to="/login"
-                    search={{ redirect: "/" }}
+                    search={{ redirect: "/mens" }}
                     className="inline-block bg-primary text-primary-foreground py-2 px-6 rounded-full text-xs uppercase tracking-widest font-semibold hover:bg-cocoa-deep transition"
                   >
                     Log In / Sign Up
@@ -1153,7 +1090,7 @@ function EnquiryCartDrawer({
                 </form>
               )}
 
-              {/* Cart Items listing */}
+              {/* Items listing */}
               <div className="space-y-4">
                 {cart.map((item, idx) => (
                   <div
@@ -1161,22 +1098,22 @@ function EnquiryCartDrawer({
                     className="flex gap-4 p-3 border border-border rounded-xl bg-card hover:border-gold/30 transition-colors"
                   >
                     <div className="w-16 h-20 bg-secondary rounded-lg overflow-hidden shrink-0">
-                      <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                      <img src={item.product.frontImage} alt={item.product.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start gap-2">
-                          <h4 className="font-display text-base text-ink line-clamp-1 leading-tight">{item.product.name}</h4>
+                          <h4 className="text-sm font-semibold text-ink line-clamp-1 leading-tight">{item.product.name}</h4>
                           <button
                             onClick={() => onRemove(item.product.id, item.size)}
-                            className="text-muted-foreground hover:text-destructive p-1 rounded-md transition-colors"
+                            className="text-muted-foreground hover:text-destructive p-0.5 rounded transition-colors"
                             aria-label="Remove item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                         <p className="text-[10px] tracking-wider text-ink/50 mt-1 uppercase">
-                          Code: {item.product.styleCode} · Size: <span className="font-semibold text-maroon">{item.size}</span>
+                          Code: {item.product.styleCode} · Size: <span className="font-bold text-maroon">{item.size}</span>
                         </p>
                       </div>
                       <div className="flex justify-between items-center mt-2">
@@ -1184,15 +1121,15 @@ function EnquiryCartDrawer({
                         <div className="flex items-center border border-border rounded-full bg-secondary overflow-hidden">
                           <button
                             onClick={() => onUpdateQty(item.product.id, item.size, -1)}
-                            className="px-2.5 py-1 hover:bg-border text-ink transition-colors"
+                            className="px-2 py-1 hover:bg-border text-ink transition-colors"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="px-2.5 text-xs font-semibold text-ink">{item.quantity}</span>
+                          <span className="px-2 text-xs font-semibold text-ink">{item.quantity}</span>
                           <button
                             onClick={() => onUpdateQty(item.product.id, item.size, 1)}
-                            className="px-2.5 py-1 hover:bg-border text-ink transition-colors"
+                            className="px-2 py-1 hover:bg-border text-ink transition-colors"
                             aria-label="Increase quantity"
                           >
                             <Plus className="w-3 h-3" />
@@ -1207,6 +1144,7 @@ function EnquiryCartDrawer({
           )}
         </div>
 
+        {/* Footer Checkout info */}
         {cart.length > 0 && (
           <div className="p-6 border-t border-border bg-secondary/50">
             <div className="flex items-center justify-between mb-4">
@@ -1219,9 +1157,9 @@ function EnquiryCartDrawer({
                 href={onSubmitLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2.5 gold-gradient text-maroon-deep py-4 rounded-full text-xs tracking-[0.3em] uppercase font-bold shadow-lg shadow-black/10 hover:-translate-y-0.5 transition-transform text-center"
+                className="w-full inline-flex items-center justify-center gap-2.5 gold-gradient text-maroon-deep py-3.5 rounded-full text-xs tracking-[0.3em] uppercase font-bold hover:shadow-lg transition-transform text-center shadow-md"
               >
-                <MessageCircle className="w-4.5 h-4.5" /> Enquire on WhatsApp
+                <MessageCircle className="w-4.5 h-4.5" /> Send WhatsApp Enquiry
               </a>
             ) : (
               <button
@@ -1234,11 +1172,84 @@ function EnquiryCartDrawer({
               </button>
             )}
             <p className="text-[9px] tracking-widest text-ink/55 text-center mt-3 uppercase">
-              {checkoutMethod === "whatsapp" ? "Sends selection with style codes & sizes" : "Stores order details in database"}
+              {checkoutMethod === "whatsapp" ? "Sends selection details & shipping info to owner" : "Stores order details in database"}
             </p>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+/* ───────────────────────── FOOTER ───────────────────────── */
+
+function MensFooter() {
+  const waMsg = encodeURIComponent("Hello Jharva Men! I'd like to know more about your ₹299 anime oversized tees collection.");
+  const waLink = WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}` : "#";
+  
+  return (
+    <footer className="bg-maroon-deep text-cream">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 sm:grid-cols-3 gap-6 border-b border-cream/10">
+        <a
+          href={waLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-4 bg-cream/5 border border-cream/10 hover:border-gold/40 rounded-xl p-4 transition-all"
+        >
+          <span className="w-10 h-10 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0">
+            <MessageCircle className="w-5 h-5" />
+          </span>
+          <div>
+            <p className="text-[9px] tracking-widest text-gold uppercase font-bold">WhatsApp</p>
+            <p className="text-sm font-semibold text-cream mt-0.5">{WHATSAPP_DISPLAY}</p>
+          </div>
+        </a>
+        <a
+          href={INSTAGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-4 bg-cream/5 border border-cream/10 hover:border-gold/40 rounded-xl p-4 transition-all"
+        >
+          <span className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white flex items-center justify-center shrink-0">
+            <Instagram className="w-5 h-5" />
+          </span>
+          <div>
+            <p className="text-[9px] tracking-widest text-gold uppercase font-bold">Instagram</p>
+            <p className="text-sm font-semibold text-cream mt-0.5">@{INSTAGRAM_HANDLE}</p>
+          </div>
+        </a>
+        <a
+          href={`mailto:${CONTACT_EMAIL}`}
+          className="flex items-center gap-4 bg-cream/5 border border-cream/10 hover:border-gold/40 rounded-xl p-4 transition-all"
+        >
+          <span className="w-10 h-10 rounded-full bg-gold text-maroon-deep flex items-center justify-center shrink-0">
+            <Mail className="w-5 h-5" />
+          </span>
+          <div>
+            <p className="text-[9px] tracking-widest text-gold uppercase font-bold">Email Support</p>
+            <p className="text-sm font-semibold text-cream mt-0.5 truncate">{CONTACT_EMAIL}</p>
+          </div>
+        </a>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-cream ring-2 ring-gold/70 font-display text-maroon text-lg font-bold select-none">J</span>
+            <span className="flex flex-col leading-none">
+              <span className="font-display text-lg text-gold tracking-wide">Jharva Men</span>
+              <span className="text-[8px] tracking-[0.4em] uppercase text-cream/70 mt-0.5">Fashion</span>
+            </span>
+          </div>
+          <p className="mt-3 text-xs text-cream/75 max-w-xs">
+            Premium anime streetwear at flat ₹299. High-quality oversized tees & apparel for absolute styling comfort.
+          </p>
+        </div>
+        <div className="text-center sm:text-right">
+          <p className="text-[10px] tracking-widest text-gold uppercase">Jharva Atelier · {LOCATION}</p>
+          <p className="text-[10px] text-cream/50 mt-2">© {new Date().getFullYear()} Jharva Fashion. All Rights Reserved.</p>
+        </div>
+      </div>
+    </footer>
   );
 }

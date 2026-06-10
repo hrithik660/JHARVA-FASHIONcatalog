@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -78,17 +79,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Lovable App" },
-      { name: "description", content: "Fashion Spark Catalog is a responsive e-commerce catalog for clothing, replicating a premium fashion brand's design and user experience." },
+      {
+        name: "description",
+        content:
+          "Fashion Spark Catalog is a responsive e-commerce catalog for clothing, replicating a premium fashion brand's design and user experience.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Fashion Spark Catalog is a responsive e-commerce catalog for clothing, replicating a premium fashion brand's design and user experience." },
+      {
+        property: "og:description",
+        content:
+          "Fashion Spark Catalog is a responsive e-commerce catalog for clothing, replicating a premium fashion brand's design and user experience.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "Fashion Spark Catalog is a responsive e-commerce catalog for clothing, replicating a premium fashion brand's design and user experience." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/Lyb6zYaVQ6MB74D5Ph89lBj7Tee2/social-images/social-1780718174535-IMG_4795.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/Lyb6zYaVQ6MB74D5Ph89lBj7Tee2/social-images/social-1780718174535-IMG_4795.webp" },
+      {
+        name: "twitter:description",
+        content:
+          "Fashion Spark Catalog is a responsive e-commerce catalog for clothing, replicating a premium fashion brand's design and user experience.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/Lyb6zYaVQ6MB74D5Ph89lBj7Tee2/social-images/social-1780718174535-IMG_4795.webp",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/Lyb6zYaVQ6MB74D5Ph89lBj7Tee2/social-images/social-1780718174535-IMG_4795.webp",
+      },
     ],
     links: [
       {
@@ -125,6 +146,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Scripts />
+        <Analytics />
       </body>
     </html>
   );

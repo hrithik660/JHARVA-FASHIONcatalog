@@ -67,8 +67,10 @@ function SignupPage() {
       return;
     }
     attemptsRef.current = 0;
-    toast.success("Account created ✨");
-    navigate({ to: redirect });
+    toast.success("Account created! Please check your email inbox and spam folder to verify your account before logging in. ✨", {
+      duration: 8000
+    });
+    navigate({ to: "/login", search: { redirect } });
   };
 
   const onGoogle = async () => {

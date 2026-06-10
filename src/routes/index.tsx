@@ -275,33 +275,67 @@ function Hero() {
   return (
     <section className="relative hero-vignette text-cream overflow-hidden">
       {/* Top bar */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-3">
-          <span className="inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-cream/95 ring-2 ring-gold/70 shadow-lg shadow-black/30 font-display text-maroon text-2xl font-bold select-none">
-            J
-          </span>
-          <span className="flex flex-col leading-none">
-            <span className="font-display text-2xl sm:text-3xl text-gold tracking-wide">Jharva</span>
-            <span className="text-[9px] sm:text-[10px] tracking-[0.4em] uppercase text-cream/70 mt-1">Fashion</span>
-          </span>
-        </a>
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-0 sm:h-24 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+        <div className="flex w-full sm:w-auto items-center justify-between">
+          <a href="#" className="flex items-center gap-3">
+            <span className="inline-flex items-center justify-center h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-cream/95 ring-2 ring-gold/70 shadow-lg shadow-black/30 font-display text-maroon text-2xl font-bold select-none">
+              J
+            </span>
+            <span className="flex flex-col leading-none">
+              <span className="font-display text-xl sm:text-3xl text-gold tracking-wide">Jharva</span>
+              <span className="text-[8px] sm:text-[10px] tracking-[0.4em] uppercase text-cream/70 mt-1">Fashion</span>
+            </span>
+          </a>
+
+          {/* Mobile User Control */}
+          <div className="flex sm:hidden items-center gap-2 text-gold">
+            {user ? (
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="text-[9px] tracking-wider uppercase border border-gold px-2.5 py-1.5 rounded-full hover:bg-gold hover:text-maroon-deep transition font-semibold"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <button
+                  onClick={() => signOut()}
+                  className="text-[9px] tracking-wider uppercase border border-gold/40 px-2.5 py-1.5 rounded-full hover:bg-gold/10 transition"
+                >
+                  Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                search={{ redirect: "/" }}
+                className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wider text-gold hover:text-gold-soft border border-gold/40 px-3 py-1 rounded-full hover:bg-gold/10 transition"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Login</span>
+              </Link>
+            )}
+          </div>
+        </div>
 
         {/* Drop Toggle Navigation */}
-        <div className="flex items-center gap-2 border border-gold/40 rounded-full bg-maroon-deep/30 backdrop-blur p-1">
+        <div className="flex items-center gap-1.5 border border-gold/40 rounded-full bg-maroon-deep/30 backdrop-blur p-1">
           <button
-            className="px-4 py-1.5 text-xs font-bold rounded-full bg-gold text-maroon-deep shadow-sm"
+            className="px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-full bg-gold text-maroon-deep shadow-sm"
           >
             Women's Drop (₹99)
           </button>
           <Link
             to="/mens"
-            className="px-4 py-1.5 text-xs font-semibold rounded-full text-cream/80 hover:text-cream transition-colors"
+            className="px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-full text-cream/80 hover:text-cream transition-colors"
           >
             Men's Drop (₹299)
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 text-gold">
+        {/* Desktop User Control */}
+        <div className="hidden sm:flex items-center gap-3 text-gold">
           {user ? (
             <div className="flex items-center gap-2.5">
               {isAdmin && (

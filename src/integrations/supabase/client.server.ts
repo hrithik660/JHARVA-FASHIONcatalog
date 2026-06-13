@@ -14,9 +14,18 @@ function createSupabaseAdminClient() {
       ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
       ...(!SUPABASE_SERVICE_ROLE_KEY ? ["SUPABASE_SERVICE_ROLE_KEY/SUPABASE_SERVICE_KEY"] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.warn(`[Supabase Admin] Missing environment variable(s): ${missing.join(", ")}. Falling back to placeholder.`);
+    return createClient<Database>(
+      SUPABASE_URL || "https://placeholder-oktnbwsavhpmmjjvpxfv.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY || "placeholder-key",
+      {
+        auth: {
+          storage: undefined,
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      }
+    );
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {

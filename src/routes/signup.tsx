@@ -44,29 +44,36 @@ function SignupPage() {
     
     console.log("Attempting signup with:", email);
     
-    const { error, data } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { full_name: name },
-      },
-    });
-    
-    setLoading(false);
-    
-    if (error) {
-      console.error("Signup error:", error);
-      setSignUpError(error.message);
-      toast.error(error.message);
-      return;
+    try {
+      const { error, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { full_name: name },
+        },
+      });
+      
+      setLoading(false);
+      
+      if (error) {
+        console.error("Signup error:", error);
+        setSignUpError(error.message);
+        toast.error(error.message);
+        return;
+      }
+      
+      console.log("Signup success:", data);
+      toast.success("Account created! Please check your email inbox to verify. ✨", {
+        duration: 8000
+      });
+      navigate({ to: "/login", search: { redirect } });
+    } catch (err: any) {
+      setLoading(false);
+      console.error("Signup exception caught:", err);
+      setSignUpError(err.message || "Connection failed. Please check your internet connection.");
+      toast.error(err.message || "Connection failed");
     }
-    
-    console.log("Signup success:", data);
-    toast.success("Account created! Please check your email inbox to verify. ✨", {
-      duration: 8000
-    });
-    navigate({ to: "/login", search: { redirect } });
   };
 
   const onGoogle = async () => {

@@ -29,6 +29,7 @@ function SignupPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,7 +51,7 @@ function SignupPage() {
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: { full_name: name },
+          data: { full_name: name, phone: phone },
         },
       });
       
@@ -133,6 +134,15 @@ function SignupPage() {
             onChange={(e) => setName(e.target.value)}
             required
             placeholder="Full name"
+            className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:border-primary outline-none"
+          />
+          <input
+            type="tel"
+            required
+            pattern="^[6-9]\d{9}$"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+            placeholder="Phone number (10 digit)"
             className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:border-primary outline-none"
           />
           <input

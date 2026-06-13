@@ -18,6 +18,7 @@ import { listPublishedProducts } from "@/lib/catalog.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { placeOrder } from "@/lib/orders.functions";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -110,6 +111,43 @@ function CatalogPage() {
     if (!isLoaded) return;
     localStorage.setItem("jharva_cart", JSON.stringify(cart));
   }, [cart, isLoaded]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfileAndLastOrder = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile) {
+          if (profile.full_name) setCustomerName(profile.full_name);
+          if (profile.phone) setCustomerPhone(profile.phone);
+        }
+        
+        const { data: lastOrder } = await supabase
+          .from("orders")
+          .select("address")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lastOrder && lastOrder.address) {
+          const addr = lastOrder.address as any;
+          if (addr.full_name && !profile?.full_name) setCustomerName(addr.full_name);
+          if (addr.phone && !profile?.phone) setCustomerPhone(addr.phone);
+          if (addr.line1) setCustomerAddress(addr.line1);
+          if (addr.pincode) setCustomerPincode(addr.pincode);
+          if (addr.city) setCustomerCity(addr.city);
+          if (addr.state) setCustomerState(addr.state);
+        }
+      } catch (err) {
+        console.error("Error fetching profile or order:", err);
+      }
+    };
+    fetchProfileAndLastOrder();
+  }, [user]);
 
   const toggleFavorite = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();

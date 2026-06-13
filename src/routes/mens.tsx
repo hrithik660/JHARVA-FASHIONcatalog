@@ -188,7 +188,6 @@ function MensCatalogPage() {
 
   return (
     <div className="min-h-screen bg-cream text-ink font-sans selection:bg-gold selection:text-maroon-deep">
-      <MensHeader />
       <MensHero />
       <MensMarquee />
       <section id="catalog" className="pt-16 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -308,13 +307,14 @@ function MensCatalogPage() {
   );
 }
 
-/* ───────────────────────── HEADER ───────────────────────── */
+/* ───────────────────────── HERO / HEADER ───────────────────────── */
 
-function MensHeader() {
+function MensHero() {
   const { user, isAdmin, signOut } = useAuth();
   return (
-    <div className="sticky top-0 z-40 w-full bg-cream/95 backdrop-blur-md border-b border-border">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-0 sm:h-24 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+    <section className="relative hero-vignette text-cream overflow-hidden">
+      {/* Top bar */}
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-0 sm:h-24 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
         <div className="flex w-full sm:w-auto items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <span className="inline-flex items-center justify-center h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-cream/95 ring-2 ring-gold/70 shadow-lg shadow-black/30 font-display text-maroon text-2xl font-bold select-none">J</span>
@@ -349,8 +349,8 @@ function MensHeader() {
                 search={{ redirect: "/mens" }}
                 className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wider text-gold hover:text-gold-soft border border-gold/40 px-3 py-1 rounded-full hover:bg-gold/10 transition"
               >
-                <User className="w-3.5 h-3.5 text-maroon" />
-                <span className="text-maroon">Login</span>
+                <User className="w-3.5 h-3.5" />
+                <span>Login</span>
               </Link>
             )}
           </div>
@@ -395,7 +395,7 @@ function MensHeader() {
                   Admin Panel
                 </Link>
               )}
-              <span className="text-xs text-ink/80 max-w-[100px] truncate hidden md:inline">
+              <span className="text-xs text-cream/80 max-w-[100px] truncate hidden md:inline">
                 {user.user_metadata?.full_name || user.email}
               </span>
               <button
@@ -411,22 +411,15 @@ function MensHeader() {
               search={{ redirect: "/mens" }}
               className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider text-gold hover:text-gold-soft border border-gold/40 px-4 py-2 rounded-full hover:bg-gold/10 transition"
             >
-              <User className="w-4 h-4 text-maroon" />
-              <span className="text-maroon">Login</span>
+              <User className="w-4 h-4" />
+              <span>Login</span>
             </Link>
           )}
         </div>
       </div>
-    </div>
-  );
-}
 
-/* ───────────────────────── HERO ───────────────────────── */
-
-function MensHero() {
-  return (
-    <section className="relative hero-vignette text-cream overflow-hidden">
-      <div className="relative z-10 mx-auto max-w-3xl px-6 pt-16 pb-20 sm:pb-28 text-center">
+      {/* Headline */}
+      <div className="relative z-10 mx-auto max-w-3xl px-6 pt-10 sm:pt-16 pb-20 sm:pb-28 text-center">
         <div className="inline-flex items-center gap-2 px-5 py-2 border border-gold/60 rounded-full text-gold text-[11px] sm:text-xs tracking-[0.3em] uppercase animate-fade-in">
           <Sparkles className="w-3.5 h-3.5" /> Drop 01 · Anime Streetwear
         </div>

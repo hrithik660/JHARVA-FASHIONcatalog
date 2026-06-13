@@ -151,11 +151,12 @@ function CatalogPage() {
     if (!WHATSAPP_NUMBER || cart.length === 0) return "#";
     let listStr = "";
     let totalItems = 0;
+    let totalCost = 0;
     cart.forEach((item) => {
       listStr += `\n- Code ${item.product.styleCode} (Size ${item.size}) x${item.quantity}`;
       totalItems += item.quantity;
+      totalCost += (item.product.price || 99) * item.quantity;
     });
-    const totalCost = totalItems * 99;
 
     let customerInfo = "";
     if (customerName.trim()) {
@@ -321,14 +322,26 @@ function Hero() {
 
         {/* Drop Toggle Navigation */}
         <div className="flex items-center gap-1.5 border border-gold/40 rounded-full bg-maroon-deep/30 backdrop-blur p-1">
-          <button
-            className="px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-full bg-gold text-maroon-deep shadow-sm"
+          <Link
+            to="/"
+            activeProps={{
+              className: "px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-full bg-gold text-maroon-deep shadow-sm",
+            }}
+            inactiveProps={{
+              className: "px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-full text-cream/80 hover:text-cream transition-colors",
+            }}
+            activeOptions={{ exact: true }}
           >
             Women's Drop (₹99)
-          </button>
+          </Link>
           <Link
             to="/mens"
-            className="px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-full text-cream/80 hover:text-cream transition-colors"
+            activeProps={{
+              className: "px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-full bg-gold text-maroon-deep shadow-sm",
+            }}
+            inactiveProps={{
+              className: "px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-full text-cream/80 hover:text-cream transition-colors",
+            }}
           >
             Men's Drop (₹299)
           </Link>
@@ -963,7 +976,7 @@ function EnquiryCartDrawer({
   if (!isOpen) return null;
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = totalItems * 99;
+  const totalPrice = cart.reduce((acc, item) => acc + (item.product.price || 99) * item.quantity, 0);
 
   const handlePlaceWebsiteOrder = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -73,7 +73,10 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * { 
+    border-color: var(--color-border); 
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
     background-color: var(--color-cream);
     color: var(--color-ink);

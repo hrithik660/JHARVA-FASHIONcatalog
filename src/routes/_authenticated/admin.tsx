@@ -12,6 +12,7 @@ import {
   Plus,
   ShoppingBag,
   Edit2,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminUpdateOrderStatus, adminStats } from "@/lib/admin.functions";
@@ -280,6 +281,21 @@ function OrderCard({
   const [isEditingTracking, setIsEditingTracking] = useState(false);
   const [savingTracking, setSavingTracking] = useState(false);
 
+  const buildWhatsAppUpdateLink = () => {
+    const phone = order.address?.phone || "";
+    if (!phone) return "#";
+    const name = order.address?.full_name || "Customer";
+    const status = order.status?.toUpperCase() || "PENDING";
+    const tracking = order.tracking_number
+      ? `Tracking Details:\nCourier: ${order.courier}\nTracking ID: ${order.tracking_number}`
+      : "We will share courier tracking details shortly.";
+
+    const message = `Hello ${name}! This is Jharva Fashion. Your order (ID: ${order.id.slice(0, 8)}) status has been updated to ${status}.\n\n${tracking}\n\nThank you for shopping with us! ✨`;
+    const cleanPhone = phone.replace(/\D/g, "");
+    const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+  };
+
   const saveTracking = async () => {
     setSavingTracking(true);
     try {
@@ -419,10 +435,18 @@ function OrderCard({
           </button>
         )}
         <a
+          href={buildWhatsAppUpdateLink()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs border border-[#128C7E] bg-[#25D366] text-white hover:bg-[#128C7E] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ml-auto sm:ml-0 shadow-sm"
+        >
+          <MessageCircle className="w-3.5 h-3.5 fill-white text-[#25D366]" /> WhatsApp Update
+        </a>
+        <a
           href={`/admin/invoice/${order.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs border border-border bg-card hover:bg-muted font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ml-auto sm:ml-0"
+          className="text-xs border border-border bg-card hover:bg-muted font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition"
         >
           <Printer className="w-3.5 h-3.5" /> Invoice
         </a>

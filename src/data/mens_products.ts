@@ -12,6 +12,10 @@ export interface MensProduct {
   sizes: string[];
   description: string;
   baseColor: string;
+  badge?: string;
+  stock?: Record<string, number>;
+  stock_total?: number;
+  in_stock?: boolean;
 }
 
 export const MENS_PRODUCTS: MensProduct[] = [

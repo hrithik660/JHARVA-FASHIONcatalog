@@ -101,7 +101,22 @@ export function ProductsTab() {
                 className="w-14 h-14 rounded-lg object-cover bg-muted"
               />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{p.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold truncate">{p.name}</p>
+                  {p.stock_total !== undefined && (p.stock_total <= 0 ? (
+                    <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded">
+                      Out of Stock
+                    </span>
+                  ) : p.stock_total < 5 ? (
+                    <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                      Low Stock ({p.stock_total})
+                    </span>
+                  ) : (
+                    <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                      In Stock ({p.stock_total})
+                    </span>
+                  ))}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {p.sku} · {p.category} · {inr(p.price)}
                   {p.mrp > p.price && <span className="line-through ml-1">{inr(p.mrp)}</span>}

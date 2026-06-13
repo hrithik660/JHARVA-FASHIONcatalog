@@ -60,6 +60,9 @@ function CatalogPage() {
       image: p.image || p.image_url,
       sizes: p.sizes || [],
       description: p.description || "",
+      stock: p.stock || {},
+      stock_total: p.stock_total !== undefined ? p.stock_total : 100,
+      in_stock: p.in_stock !== undefined ? p.in_stock : true,
     }));
   }, [dbData]);
 
@@ -691,19 +694,25 @@ function ProductDialog({
               <div className="mt-6">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-ink/60 mb-2">Select Size</p>
                 <div className="flex flex-wrap gap-2.5">
-                  {product.sizes.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSelectedSize(s)}
-                      className={`px-4 py-2 border rounded-full text-xs transition-all uppercase tracking-wider ${
-                        selectedSize === s
-                          ? "bg-maroon text-cream border-maroon shadow-md font-semibold"
-                          : "border-border hover:border-maroon text-ink"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  {product.sizes.map((s) => {
+                    const isSizeOutOfStock = product.stock && product.stock[s] !== undefined && product.stock[s] <= 0;
+                    return (
+                      <button
+                        key={s}
+                        disabled={isSizeOutOfStock}
+                        onClick={() => setSelectedSize(s)}
+                        className={`px-4 py-2 border rounded-full text-xs transition-all uppercase tracking-wider relative ${
+                          selectedSize === s
+                            ? "bg-maroon text-cream border-maroon shadow-md font-semibold"
+                            : isSizeOutOfStock
+                              ? "border-muted text-muted-foreground bg-muted/20 cursor-not-allowed line-through opacity-50"
+                              : "border-border hover:border-maroon text-ink"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -717,15 +726,34 @@ function ProductDialog({
                 >
                   <MessageCircle className="w-3.5 h-3.5" /> Enquire
                 </a>
-                <button
-                  onClick={() => {
-                    onAddToCart(product, selectedSize);
-                    onClose();
-                  }}
-                  className="inline-flex items-center justify-center gap-2 bg-maroon text-cream hover:bg-maroon-deep py-4 px-4 rounded-full text-[11px] tracking-[0.25em] uppercase font-semibold shadow-md hover:-translate-y-0.5 transition-all"
-                >
-                  <ShoppingBag className="w-3.5 h-3.5" /> Add to List
-                </button>
+                {(() => {
+                  const sizeStock = product.stock && selectedSize ? product.stock[selectedSize] : undefined;
+                  const isSelectedSizeOutOfStock = sizeStock !== undefined && sizeStock <= 0;
+                  const isProductOutOfStock = product.in_stock === false;
+                  const isBtnDisabled = isSelectedSizeOutOfStock || isProductOutOfStock;
+                  return (
+                    <button
+                      disabled={isBtnDisabled}
+                      onClick={() => {
+                        onAddToCart(product, selectedSize);
+                        onClose();
+                      }}
+                      className={`inline-flex items-center justify-center gap-2 py-4 px-4 rounded-full text-[11px] tracking-[0.25em] uppercase font-semibold shadow-md transition-all ${
+                        isBtnDisabled
+                          ? "bg-muted text-muted-foreground cursor-not-allowed shadow-none"
+                          : "bg-maroon text-cream hover:bg-maroon-deep hover:-translate-y-0.5"
+                      }`}
+                    >
+                      {isProductOutOfStock || isSelectedSizeOutOfStock ? (
+                        <>Out of Stock</>
+                      ) : (
+                        <>
+                          <ShoppingBag className="w-3.5 h-3.5" /> Add to List
+                        </>
+                      )}
+                    </button>
+                  );
+                })()}
               </div>
               <div className="mt-3 flex items-center justify-between text-[10px] tracking-[0.25em] uppercase text-ink/55 px-1">
                 <span>Code: {product.styleCode}</span>

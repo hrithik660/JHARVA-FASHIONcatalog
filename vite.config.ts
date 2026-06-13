@@ -15,11 +15,4 @@ export default defineConfig({
   nitro: {
     preset: "vercel",
   },
-  vite: {
-    define: {
-      "process.env.SUPABASE_URL": JSON.stringify(process.env.SUPABASE_URL || null),
-      "process.env.SUPABASE_PUBLISHABLE_KEY": JSON.stringify(process.env.SUPABASE_PUBLISHABLE_KEY || null),
-      "process.env.SUPABASE_ANON_KEY": JSON.stringify(process.env.SUPABASE_ANON_KEY || null),
-    }
-  }
 });

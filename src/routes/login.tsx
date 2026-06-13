@@ -20,35 +20,37 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [lockoutUntil, setLockoutUntil] = useState(0);
-  const attemptsRef = useRef(0);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
-  const isLockedOut = Date.now() < lockoutUntil;
+  const isLockedOut = false; // Disable lockout for debugging
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (isLockedOut) {
-      toast.error("Too many attempts. Please wait before trying again.");
-      return;
-    }
+    setLoginError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      attemptsRef.current++;
-      if (attemptsRef.current >= MAX_ATTEMPTS) {
-        setLockoutUntil(Date.now() + LOCKOUT_MS);
-        attemptsRef.current = 0;
-        toast.error("Too many failed attempts. Locked for 30 seconds.");
-        setTimeout(() => setLockoutUntil(0), LOCKOUT_MS);
-      } else {
+    
+    console.log("Attempting sign-in with:", email);
+    
+    try {
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      
+      if (error) {
+        console.error("Sign-in error:", error);
+        setLoginError(error.message);
         toast.error(error.message);
+        return;
       }
-      return;
+      
+      console.log("Sign-in success:", data);
+      toast.success("Welcome back ✨");
+      navigate({ to: redirect });
+    } catch (err: any) {
+      setLoading(false);
+      console.error("Sign-in exception caught:", err);
+      setLoginError(err.message || "Connection failed. Please check your internet connection.");
+      toast.error(err.message || "Connection failed");
     }
-    attemptsRef.current = 0;
-    toast.success("Welcome back ✨");
-    navigate({ to: redirect });
   };
 
   const onGoogle = async () => {
@@ -136,6 +138,11 @@ function LoginPage() {
               Forgot password?
             </Link>
           </div>
+          {loginError && (
+            <div className="bg-red-500/10 border border-red-500/25 rounded-xl p-3 text-red-500 text-xs text-center font-medium my-2">
+              {loginError}
+            </div>
+          )}
           <button
             disabled={loading || isLockedOut}
             className="w-full bg-primary text-primary-foreground py-3.5 rounded-full uppercase tracking-[0.2em] text-xs font-semibold hover:bg-cocoa-deep transition disabled:opacity-60"

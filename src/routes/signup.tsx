@@ -32,20 +32,19 @@ function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [lockoutUntil, setLockoutUntil] = useState(0);
-  const attemptsRef = useRef(0);
+  const [signUpError, setSignUpError] = useState<string | null>(null);
 
-  const isLockedOut = Date.now() < lockoutUntil;
+  const isLockedOut = false; // Disable lockout for debugging
   const strength = password.length > 0 ? getPasswordStrength(password) : null;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (isLockedOut) {
-      toast.error("Too many attempts. Please wait before trying again.");
-      return;
-    }
+    setSignUpError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    
+    console.log("Attempting signup with:", email);
+    
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -53,21 +52,18 @@ function SignupPage() {
         data: { full_name: name },
       },
     });
+    
     setLoading(false);
+    
     if (error) {
-      attemptsRef.current++;
-      if (attemptsRef.current >= MAX_SIGNUP_ATTEMPTS) {
-        setLockoutUntil(Date.now() + SIGNUP_LOCKOUT_MS);
-        attemptsRef.current = 0;
-        toast.error("Too many attempts. Locked for 60 seconds.");
-        setTimeout(() => setLockoutUntil(0), SIGNUP_LOCKOUT_MS);
-      } else {
-        toast.error(error.message);
-      }
+      console.error("Signup error:", error);
+      setSignUpError(error.message);
+      toast.error(error.message);
       return;
     }
-    attemptsRef.current = 0;
-    toast.success("Account created! Please check your email inbox and spam folder to verify your account before logging in. ✨", {
+    
+    console.log("Signup success:", data);
+    toast.success("Account created! Please check your email inbox to verify. ✨", {
       duration: 8000
     });
     navigate({ to: "/login", search: { redirect } });
@@ -159,6 +155,11 @@ function SignupPage() {
               <p className={`text-[0.65rem] font-semibold ${strength.color === 'bg-green-500' ? 'text-green-600' : strength.color === 'bg-amber-400' ? 'text-amber-600' : 'text-red-500'}`}>
                 {strength.label}
               </p>
+            </div>
+          )}
+          {signUpError && (
+            <div className="bg-red-500/10 border border-red-500/25 rounded-xl p-3 text-red-500 text-xs text-center font-medium my-2">
+              {signUpError}
             </div>
           )}
           <button

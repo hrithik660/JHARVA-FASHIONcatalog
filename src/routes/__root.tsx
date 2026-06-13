@@ -78,6 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
+      { name: "google", content: "notranslate" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Jharva Fashion — Premium & Affordable Apparel" },
       { name: "description", content: "Shop Jharva Fashion — Premium kurtis, tops, dresses, co-ords, and anime printed oversized tees. Enquire by style code on WhatsApp." },
@@ -120,11 +121,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="notranslate" translate="no">
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="notranslate">
         {children}
         <Analytics />
         <Scripts />

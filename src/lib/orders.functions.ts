@@ -41,7 +41,9 @@ const PlaceOrderSchema = z.object({
 });
 
 function publicClient() {
-  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+  const url = process.env.SUPABASE_URL!;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY!;
+  return createClient(url, key, {
     auth: { persistSession: false },
   });
 }
